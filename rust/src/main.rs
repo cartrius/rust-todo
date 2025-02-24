@@ -20,7 +20,7 @@ struct CreateTodoItem {
 }
 
 #[derive(Deserialize)]
-struct updateTodoItem {
+struct UpdateTodoItem {
     title: Option<String>,
     completed: Option<bool>,
 }
@@ -51,7 +51,7 @@ async fn add_todo(
 
 async fn update_todo(
     path: web::Path<Uuid>,
-    item: web::Json<updateTodoItem>,
+    item: web::Json<UpdateTodoItem>,
     data: web::Data<AppState>
 ) -> impl Responder {
         let mut todos = data.todo_list.lock().unwrap();
@@ -73,7 +73,6 @@ async fn update_todo(
 
 async fn delete_todo(
     path: web::Path<Uuid>,
-    item: web::Json<updateTodoItem>,
     data: web::Data<AppState>,
 ) -> impl Responder {
     let mut todos = data.todo_list.lock().unwrap();
@@ -83,4 +82,27 @@ async fn delete_todo(
     } else {
         HttpResponse::NotFound().body("Todo not found")
     }
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    let app_state = web::Data::new(AppState {
+        todo_list: Mutex::new(Vec::new()),
+    });
+    
+    HttpServer::new( move || {
+        let cors = Cors::default()
+        .allow_any_origin()
+        .allow_any_method()
+        .max_age(3600);
+
+    App::new()
+    .app_data(app_state.clone())
+    .wrap(cors).route("todos", web::get().to(get_todos))
+    .route("/todos", web::post().to(add_todo))
+    .route("/todos/{id}", web::put().to(update_todo))
+    .route("/todos/{id}", web::delete().to(delete_todo))
+    })
+    .bind("127.0.0.1:8080") ? .run().await
+
 }
