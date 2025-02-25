@@ -84,25 +84,35 @@ async fn delete_todo(
     }
 }
 
+// Sets up the server (marks entry point of the web server)
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Creates AppState, intializing an empty To-Do list
     let app_state = web::Data::new(AppState {
         todo_list: Mutex::new(Vec::new()),
     });
     
-    HttpServer::new( move || {
+    // Starts an HTTP server
+    HttpServer::new(move || {
+        // Alows any origin and method for API access
         let cors = Cors::default()
         .allow_any_origin()
         .allow_any_method()
+        .allow_any_header()
         .max_age(3600);
 
+    // Shares state across requests
     App::new()
     .app_data(app_state.clone())
-    .wrap(cors).route("todos", web::get().to(get_todos))
+    // Enables CORS
+    .wrap(cors)
+    // Maps HTTP routes to handler functions
+    .route("todos", web::get().to(get_todos))
     .route("/todos", web::post().to(add_todo))
     .route("/todos/{id}", web::put().to(update_todo))
     .route("/todos/{id}", web::delete().to(delete_todo))
     })
+    // Binds server to localhost and starts event loop
     .bind("127.0.0.1:8080") ? .run().await
 
 }
