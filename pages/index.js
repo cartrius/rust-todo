@@ -13,12 +13,12 @@ const index = () => {
   const [todoInput, setTodoInput] = useState ("");
   const [editIndex, setEditIndex] = useState(-1);
   const [searchInput, setSearchInput] = useState("");
-  const [searchresults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
 
   // State Management
   const [count, setCount] = useState(0);
   const [search, setSearch] = useState("");
-  const [searchItem, searchSearchItem] = useState(search);
+  const [searchItem, setSearchItem] = useState(search);
 
   useEffect(()=> {
     fetchTodos()
@@ -32,6 +32,7 @@ const index = () => {
   const fetchTodos = async()=> {
     try {
       const response = await axios.get("http://127.0.0.1:8080/todos");
+      console.log("API Response:", response.data);
       console.log(response);
       setTodos(response.data);
       setTodosCopy(response.data);
@@ -48,6 +49,7 @@ const index = () => {
           title: todoInput,
           completed: false,
       });
+      console.log("Before setting todos, todosCopy is:", todosCopy);
         setTodos(response.data);
         setTodosCopy(response.data);
         setTodoInput("");
@@ -55,10 +57,7 @@ const index = () => {
         // Update Existing Todo
         const todoToUpdate = {...todos[editIndex], title: todoInput };
         const response = await axios.put(`http://127.0.0.1:8080/todos/${todoToUpdate.id}`,
-          {
-            title: todoInput,
-            completed: false,
-          }
+          todoToUpdate
         );
         console.log(response)
         const updatedTodos = [...todos];
@@ -88,9 +87,11 @@ const index = () => {
         ...todos[index], 
         completed: !todos[index].completed,
       }
-      const response = await axios.delete(`http://127.0.0.1:8080/todos/${id}`);
+      const response = await axios.put(`http://127.0.0.1:8080/todos/${todoToUpdate.id}`,
+        todoToUpdate
+      );
       const updateTodos = [...todos];
-      updatedTodos[index] = response.data;
+      updateTodos[index] = response.data;
       setTodos(updateTodos);
       setCount(count + 1);
     } catch (error) {
@@ -100,7 +101,7 @@ const index = () => {
 
   const searchTodo = ()=> {
     const results = todos.filter((todo)=> 
-      todo.title.toLowerCase().includes(searchinput.toLowercase())
+      todo.title.toLowerCase().includes(searchInput.toLowercase())
     );
     setSearchResults(results);
   }
@@ -117,8 +118,12 @@ const index = () => {
   }
 
   const renderTodos = (todosTorender)=> {
+    console.log("Rendering todos:", todosTorender);
+    console.log("Type of todosToRender:", typeof todosTorender);
+    console.log("Is Array:", Array.isArray(todosTorender));
     return todosTorender.map((todo, index)=> (
       <li key={index} className="li">
+        <CheckBox toggleCompleted={toggleCompleted} index={index} todo={todo}/>
         <label htmlFor="" className="form-check-label"></label>
         <span className="todo-text">
           {`${todo.title} ${formatDate(todo.created_at)}`}
@@ -142,7 +147,8 @@ const index = () => {
     // Filter
     const onHandleSearch = (value) => {
       const filteredToDo = todos.filter(({ title }) => 
-        title.toLowerCase()).includes(value.toLowerCase());
+        title.toLowerCase()).includes(value.toLowerCase()
+    );
       if (filteredToDo.length === 0) {
         setTodos(todosCopy);
       } else {
@@ -163,7 +169,7 @@ const index = () => {
 
     useEffect(()=> {
       if (search) {
-        onHandleSearch();
+        onHandleSearch(search);
       } else {
         onClearSearch();
       }
