@@ -101,7 +101,7 @@ const index = () => {
 
   const searchTodo = ()=> {
     const results = todos.filter((todo)=> 
-      todo.title.toLowerCase().includes(searchInput.toLowercase())
+      todo.title.toLowerCase().includes(searchInput.toLowerCase())
     );
     setSearchResults(results);
   }
@@ -147,7 +147,7 @@ const index = () => {
     // Filter
     const onHandleSearch = (value) => {
       const filteredToDo = todos.filter(({ title }) => 
-        title.toLowerCase()).includes(value.toLowerCase()
+        title.toLowerCase().includes(value.toLowerCase())
     );
       if (filteredToDo.length === 0) {
         setTodos(todosCopy);
